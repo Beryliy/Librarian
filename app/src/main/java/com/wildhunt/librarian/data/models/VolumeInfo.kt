@@ -4,12 +4,12 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class VolumeInfo (
-  val authors: List<String>,
-  val categories: List<String>,
-  val description: String,
-  val imageLinks: ImageLinks,
-  val language: String,
-  val pageCount: Int,
-  val subtitle: String,
-  val title: String
+  val authors: List<String>? = null,
+  val categories: List<String>? = null,
+  val description: String? = null,
+  val imageLinks: ImageLinks? = null,
+  val language: String? = null,
+  val pageCount: Int? = null,
+  val subtitle: String? = null,
+  val title: String? = null,
 )

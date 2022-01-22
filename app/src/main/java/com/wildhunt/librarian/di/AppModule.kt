@@ -6,9 +6,13 @@ import android.speech.SpeechRecognizer
 import com.squareup.moshi.Moshi
 import com.wildhunt.librarian.USER_TOKEN
 import com.wildhunt.librarian.data.BooksAPI
+import com.wildhunt.librarian.data.BooksRemoteRepository
 import com.wildhunt.librarian.data.WitApi
 import com.wildhunt.librarian.data.WitRepositoryImpl
+import com.wildhunt.librarian.domain.repository.BooksRepository
 import com.wildhunt.librarian.domain.repository.WitRepository
+import com.wildhunt.librarian.domain.use_cases.GetBooksUseCase
+import com.wildhunt.librarian.domain.use_cases.GetBooksUseCaseImpl
 import com.wildhunt.librarian.domain.use_cases.GetKeywordsUseCase
 import com.wildhunt.librarian.domain.use_cases.GetKeywordsUseCaseImpl
 import dagger.Module
@@ -26,8 +30,18 @@ class AppModule {
   }
 
   @Provides
+  fun provideGetBooksUseCase(booksRepository: BooksRepository): GetBooksUseCase {
+    return GetBooksUseCaseImpl(booksRepository)
+  }
+
+  @Provides
   fun provideWitRepository(witApi: WitApi): WitRepository {
     return WitRepositoryImpl(witApi)
+  }
+
+  @Provides
+  fun provideBooksRepository(booksApi: BooksAPI): BooksRepository {
+    return BooksRemoteRepository(booksApi)
   }
 
   @Provides
@@ -42,7 +56,9 @@ class AppModule {
           ).build()
         chain.proceed(request)
       }
-      .addInterceptor(HttpLoggingInterceptor())
+      .addInterceptor(HttpLoggingInterceptor().apply {
+        setLevel(HttpLoggingInterceptor.Level.BODY)
+      })
       .build()
 
     val retrofit = Retrofit.Builder()
@@ -78,10 +94,12 @@ class AppModule {
             )
           }.build()
           chain.proceed(request)
-        }.build()
+        }.addInterceptor(HttpLoggingInterceptor().apply {
+          setLevel(HttpLoggingInterceptor.Level.BODY)
+        }).build()
 
     val retrofit = Retrofit.Builder()
-      .baseUrl("https://books.googleapis.com")
+      .baseUrl("https://www.googleapis.com/")
       .addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().build()))
       .client(client)
       .build()

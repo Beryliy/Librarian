@@ -6,6 +6,8 @@ import androidx.lifecycle.lifecycleScope
 import com.wildhunt.librarian.data.WitApi
 import com.wildhunt.librarian.databinding.ActivityMainBinding
 import com.wildhunt.librarian.di.AppComponent
+import com.wildhunt.librarian.domain.use_cases.GetBooksUseCase
+import com.wildhunt.librarian.domain.use_cases.GetKeywordsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -15,7 +17,10 @@ class MainActivity : AppCompatActivity() {
   private val binding: ActivityMainBinding get() = _binding!!
 
   @Inject
-  lateinit var api: WitApi
+  lateinit var keywordsUseCase: GetKeywordsUseCase
+
+  @Inject
+  lateinit var booksUseCase: GetBooksUseCase
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -27,9 +32,11 @@ class MainActivity : AppCompatActivity() {
 
     lifecycleScope.launchWhenCreated {
       withContext(Dispatchers.IO) {
-        val resp = api.getWitResponse("im happy")
+        val keywords = keywordsUseCase.get("I don't to read anything.")
+        val books = booksUseCase.getBooks(keywords.takeUnless { it.isEmpty() } ?: listOf("I don't to read anything"))
+
         withContext(Dispatchers.Main) {
-          binding.text.text = resp.toString()
+          binding.text.text = books.joinToString()
         }
       }
     }
