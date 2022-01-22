@@ -30,15 +30,15 @@ class MainActivity : AppCompatActivity() {
 
     AppComponent.get(this).inject(this)
 
-    lifecycleScope.launchWhenCreated {
-      withContext(Dispatchers.IO) {
-        val keywords = keywordsUseCase.get("I don't to read anything.")
-        val books = booksUseCase.getBooks(keywords.takeUnless { it.isEmpty() } ?: listOf("I don't to read anything"))
-
-        withContext(Dispatchers.Main) {
-          binding.text.text = books.joinToString()
-        }
-      }
+//    lifecycleScope.launchWhenCreated {
+//      withContext(Dispatchers.IO) {
+//        val keywords = keywordsUseCase.get("I don't to read anything.")
+//        val books = booksUseCase.getBooks(keywords.takeUnless { it.isEmpty() } ?: listOf("I don't to read anything"))
+//
+//        withContext(Dispatchers.Main) {
+//          binding.text.text = books.joinToString()
+//        }
+//      }
     }
   }
 }
