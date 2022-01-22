@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -62,10 +64,34 @@ class ChatFragment : Fragment() {
   fun MessagesList(messages: List<Message>, modifier: Modifier) {
     LazyColumn(modifier = modifier) {
       items(messages) { message ->
-        MessageItem(message)
+        if(message is AudioMessage) {
+          AudioMessage(message = message, viewModel = viewModel)
+        } else {
+          MessageItem(message)
+        }
         Divider()
       }
     }
+  }
+
+  @Composable
+  fun AudioMessage(
+    message: AudioMessage,
+    viewModel: ChatViewModel
+  ) {
+    Row {
+      Text(text = "Audio message")
+      Button(
+        modifier = Modifier.size(32.dp),
+        onClick = { viewModel.startPlaying(message.fileName) }
+      ) {
+        Icon(
+          imageVector = Icons.Default.PlayArrow,
+          contentDescription = "Play audio message"
+        )
+      }
+    }
+
   }
 
   @Composable
@@ -115,10 +141,7 @@ class ChatFragment : Fragment() {
   fun MessageInput(viewModel: ChatViewModel) {
     var input by remember { mutableStateOf("") }
 
-    fun sendMessage() {
-      viewModel.sendUserMessage(input)
-      input = ""
-    }
+    val fileName = requireActivity().externalCacheDir?.absolutePath + "/voice.3gp"
 
     Row {
       TextField(
@@ -127,12 +150,20 @@ class ChatFragment : Fragment() {
         onValueChange = { input = it }
       )
       Button(
-        modifier = Modifier.height(56.dp),
-        onClick = { sendMessage() },
-        enabled = input.isNotBlank()
+        modifier = Modifier.height(32.dp),
+        onClick = { viewModel.startAudioRecording(fileName) },
       ) {
         Icon(
-          imageVector = Icons.Default.Send,
+          imageVector = Icons.Default.PlayArrow,
+          contentDescription = "Send button"
+        )
+      }
+      Button(
+        modifier = Modifier.height(32.dp),
+        onClick = { viewModel.stopAudioRecording(fileName) },
+      ) {
+        Icon(
+          imageVector = Icons.Default.Done,
           contentDescription = "Send button"
         )
       }

@@ -1,6 +1,7 @@
 package com.wildhunt.librarian.di
 
 import android.content.Context
+import com.wildhunt.librarian.MainActivity
 import dagger.BindsInstance
 import dagger.Component
 
@@ -10,6 +11,7 @@ import dagger.Component
   ]
 )
 interface AppComponent {
+  fun inject(activity: MainActivity)
 
   @Component.Builder
   interface Builder {
