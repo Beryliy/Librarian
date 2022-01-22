@@ -5,50 +5,22 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-class ChatViewModel : ViewModel(), LifecycleEventObserver {
+class ChatViewModel : ViewModel() {
 
-  private val _messages = MutableStateFlow(emptyList<Message>())
-  val messages: Flow<List<Message>> = _messages
+  private val messages = mutableListOf<Message>()
 
-  override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+  private val _messagesFlow = MutableStateFlow<List<Message>>(messages)
+  val messagesFlow: Flow<List<Message>> = _messagesFlow
+
+  fun sendUserMessage(messageText: String) {
+    messages.add(
+      Message(
+        Persona.ME,
+        messageText
+      )
+    )
     viewModelScope.launch {
-      when (event) {
-        Lifecycle.Event.ON_START -> {
-          _messages.emit(
-            listOf(
-              Message(
-                Persona.AI,
-                "Hey, wats up?"
-              ),
-              Message(
-                Persona.ME,
-                "Not bad"
-              ),
-              Message(
-                Persona.AI,
-                "What do you want to read?"
-              ),
-              Message(
-                Persona.ME,
-                "Something"
-              ),
-              Message(
-                Persona.AI,
-                "Any genre?"
-              ),
-              Message(
-                Persona.ME,
-                "Fiction"
-              ),
-
-              Message(
-                Persona.AI,
-                "Here it is"
-              ),
-            )
-          )
-        }
-      }
+      _messagesFlow.emit(messages)
     }
   }
 }
