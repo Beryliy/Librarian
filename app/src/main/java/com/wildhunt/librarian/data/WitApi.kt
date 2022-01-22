@@ -6,5 +6,8 @@ import retrofit2.http.Query
 
 interface WitApi {
     @POST("/message")
-    suspend fun getWitResponse(@Query("q") message: String): WitResponse
+    suspend fun getWitResponse(
+        @Query("q") message: String,
+        @Query("v") ver: String = "20210928",
+    ): WitResponse
 }

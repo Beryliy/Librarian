@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.wildhunt.librarian">
 
+  <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="Manifest.permission.RECORD_AUDIO"/>
 
   <application

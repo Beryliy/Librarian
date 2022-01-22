@@ -10,12 +10,14 @@ data class WitResponse(
     val intents: List<Intent>? = null,
     val entities: Map<String, List<Entity>>? = null,
 ) {
+    @JsonClass(generateAdapter = true)
     data class Intent(
         val id: String,
         val name: String,
         val confidence: Double,
     )
 
+    @JsonClass(generateAdapter = true)
     data class Entity(
         val id: String,
         val name: String,

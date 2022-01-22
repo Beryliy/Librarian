@@ -13,11 +13,10 @@ import com.wildhunt.librarian.domain.use_cases.GetKeywordsUseCase
 import com.wildhunt.librarian.domain.use_cases.GetKeywordsUseCaseImpl
 import dagger.Module
 import dagger.Provides
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import javax.inject.Qualifier
 
 @Module
 class AppModule {
@@ -32,7 +31,7 @@ class AppModule {
   }
 
   @Provides
-  fun provideWitApi(retrofit: Retrofit): WitApi {
+  fun provideWitApi(): WitApi {
     val client = OkHttpClient.Builder()
       .addInterceptor { chain ->
         val request = chain.request()
@@ -41,12 +40,14 @@ class AppModule {
             "Authorization",
             "Bearer WKAEAOBORPWX3ERM7HWDLHWFD72R7K2H"
           ).build()
-
         chain.proceed(request)
-      }.build()
+      }
+      .addInterceptor(HttpLoggingInterceptor())
+      .build()
 
     val retrofit = Retrofit.Builder()
       .baseUrl("https://api.wit.ai")
+      .addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().build()))
       .client(client)
       .build()
 
@@ -62,37 +63,29 @@ class AppModule {
     context.getSharedPreferences(context.packageName + "_preferences", Context.MODE_PRIVATE)
 
   @Provides
-  fun provideInterceptor(preferences: SharedPreferences): Interceptor =
-    Interceptor { chain ->
-      val request = chain.request().newBuilder().apply {
-        preferences.getString(USER_TOKEN, "")
-        addHeader(
-          "Authorization",
-          "Bearer ${preferences.getString(USER_TOKEN, "")}"
-        )
-        addHeader(
-          "Accept",
-          "application/json"
-        )
-      }.build()
-      chain.proceed(request)
-    }
+  fun provideBooksAPI(preferences: SharedPreferences): BooksAPI {
+    val client = OkHttpClient.Builder()
+      .addInterceptor { chain ->
+          val request = chain.request().newBuilder().apply {
+            preferences.getString(USER_TOKEN, "")
+            addHeader(
+              "Authorization",
+              "Bearer ${preferences.getString(USER_TOKEN, "")}"
+            )
+            addHeader(
+              "Accept",
+              "application/json"
+            )
+          }.build()
+          chain.proceed(request)
+        }.build()
 
-  @Provides
-  fun provideOkHttp(interceptor: Interceptor): OkHttpClient =
-    OkHttpClient.Builder()
-      .addInterceptor(interceptor)
-      .build()
-
-  @Provides
-  fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit =
-    Retrofit.Builder()
-      .client(okHttpClient)
+    val retrofit = Retrofit.Builder()
       .baseUrl("https://books.googleapis.com")
       .addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().build()))
+      .client(client)
       .build()
 
-  @Provides
-  fun provideBooksAPI(retrofit: Retrofit): BooksAPI =
-    retrofit.create(BooksAPI::class.java)
+    return retrofit.create(BooksAPI::class.java)
+  }
 }
