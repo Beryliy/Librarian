@@ -12,13 +12,13 @@ fun Item.toBook(): Book =
   volumeInfo.run {
     Book(
       id,
-      authors,
-      categories,
-      description,
-      imageLinks.toImages(),
-      language,
-      pageCount,
-      subtitle,
-      title
+      authors ?: listOf(),
+      categories ?: listOf(),
+      description ?: "",
+      imageLinks?.toImages(),
+      language ?: "",
+      pageCount ?: 0,
+      subtitle ?: "",
+      title ?: ""
     )
   }

@@ -11,8 +11,7 @@ class BooksRepo(
 
   suspend fun getBooks(query: String, subject: String): List<Book> =
     booksAPI.getBooks(
-      query = query + "subject:" + subject,
-      key = BuildConfig.BOOKS_KEY
+      query = query + "subject:" + subject
     ).items.map { item ->
       item.toBook()
     }

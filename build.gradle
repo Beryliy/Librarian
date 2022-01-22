@@ -10,6 +10,7 @@ buildscript {
     moshi_converter_version = '2.9.0'
     auth_version = '20.0.1'
     prefs_ktx = "1.7.0"
+    compose_version = '1.0.5'
   }
   repositories {
     google()
@@ -18,7 +19,8 @@ buildscript {
   dependencies {
     classpath "com.android.tools.build:gradle:7.0.3"
     classpath 'com.google.gms:google-services:4.3.10'
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.20"
+    classpath "com.android.tools.build:gradle:7.0.4"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
 
     // NOTE: Do not place your application dependencies here; they belong
     // in the individual module build.gradle files
