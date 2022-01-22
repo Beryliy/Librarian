@@ -6,6 +6,8 @@ buildscript {
     retrofit_version = '2.9.0'
     okhtttp_version = '4.9.3'
     nav_version = '2.3.5'
+    moshi_version = '1.13.0'
+    moshi_converter_version = '2.9.0'
   }
   repositories {
     google()
