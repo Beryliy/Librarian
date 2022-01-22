@@ -3,6 +3,7 @@
     package="com.wildhunt.librarian">
 
   <uses-permission android:name="Manifest.permission.RECORD_AUDIO"/>
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
   <application
       android:allowBackup="true"
