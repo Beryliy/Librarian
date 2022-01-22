@@ -8,8 +8,7 @@ import dagger.Component
 @ApplicationScope
 @Component(
   modules = [
-    AppModule::class,
-    ViewModelModule::class
+    AppModule::class
   ]
 )
 interface AppComponent {

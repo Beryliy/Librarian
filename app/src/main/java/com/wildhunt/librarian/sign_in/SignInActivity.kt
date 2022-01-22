@@ -2,9 +2,9 @@ package com.wildhunt.librarian.sign_in
 
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -25,6 +25,8 @@ class SignInActivity : AppCompatActivity() {
   private val signIn = registerForActivityResult(SignIn()) { task ->
     try {
       viewModel.userSignedIn(task.result.idToken)
+      setResult(1)
+      finish()
     } catch (ae: ApiException) {
       //TODO: handle error
     }
@@ -53,9 +55,5 @@ class SignInActivity : AppCompatActivity() {
 
     override fun parseResult(resultCode: Int, intent: Intent?): Task<GoogleSignInAccount> =
       GoogleSignIn.getSignedInAccountFromIntent(intent)
-  }
-
-  companion object {
-    private const val SIGN_IN = 1
   }
 }
