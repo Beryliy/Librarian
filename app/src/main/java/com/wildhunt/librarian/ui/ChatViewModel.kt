@@ -18,8 +18,8 @@ class ChatViewModel : ViewModel() {
 
   private var conversationState: ConversationState = ConversationState.Greeting
   private var detectedKeywords = mutableSetOf<String>()
-  private var cachedBooks = mutableListOf<Book>()
-  private val KEYWORD_THRESHOLD = 5
+  private var cachedBooks = mutableSetOf<Book>()
+  private val KEYWORD_THRESHOLD = 3
 
   @Inject
   lateinit var getBooks: GetBooksUseCase
@@ -49,15 +49,14 @@ class ChatViewModel : ViewModel() {
 
   private suspend fun reply() {
     if (detectedKeywords.size > KEYWORD_THRESHOLD) {
-      if (cachedBooks.isEmpty()) {
-        val books = getBooks.getBooks(detectedKeywords.toList())
-        cachedBooks.addAll(books.sortedByDescending { it.rating })
-      }
+      val books = getBooks.getBooks(detectedKeywords.toList())
+      cachedBooks.addAll(books)
 
       if (cachedBooks.isEmpty()) {
         aiReply(Questions.noBooks)
       } else {
-        val book = cachedBooks.removeAt(0)
+        val book = cachedBooks.maxByOrNull { it.rating } ?: return aiReply(Questions.noBooks)
+        cachedBooks.remove(book)
         val detailed = getBooks.getDetails(book)
 
         aiReply("Take a look at this book:")

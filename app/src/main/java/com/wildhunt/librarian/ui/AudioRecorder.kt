@@ -13,7 +13,7 @@ class AudioRecorder {
     recorder = MediaRecorder().apply {
       setAudioSource(MediaRecorder.AudioSource.MIC)
       setOutputFile(fileName)
-      setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+      setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
       setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
 
       try {

@@ -11,8 +11,8 @@ object Questions {
 
     val genres = """
         Which genre do you prefer?
-        Should it be classical literature or adventure novels or something else?
-        May I suggest you some poetry or do you like another kind of books?
+        Could you tell me which genres do you prefer?
+        Describe your favourite books on this topic.
         Which books do you prefer?
     """.trimIndent().split("\n")
 
