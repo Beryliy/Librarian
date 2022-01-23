@@ -1,4 +1,4 @@
-package com.wildhunt.librarian.domain
+package com.wildhunt.librarian.domain.models
 
 data class Images(
   val smallThumbnail: String,

@@ -1,4 +1,4 @@
-package com.wildhunt.librarian
+package com.wildhunt.librarian.ui
 
 import android.media.MediaPlayer
 import android.util.Log

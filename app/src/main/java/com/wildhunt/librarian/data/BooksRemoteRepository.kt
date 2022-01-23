@@ -1,6 +1,6 @@
 package com.wildhunt.librarian.data
 
-import com.wildhunt.librarian.domain.Book
+import com.wildhunt.librarian.domain.models.Book
 import com.wildhunt.librarian.domain.repository.BooksRepository
 
 class BooksRemoteRepository(

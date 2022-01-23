@@ -1,6 +1,6 @@
 package com.wildhunt.librarian.domain.use_cases
 
-import com.wildhunt.librarian.domain.Book
+import com.wildhunt.librarian.domain.models.Book
 import com.wildhunt.librarian.domain.repository.BooksRepository
 
 interface GetBooksUseCase {

@@ -1,7 +1,7 @@
 package com.wildhunt.librarian.di
 
 import android.content.Context
-import com.wildhunt.librarian.MainActivity
+import com.wildhunt.librarian.ui.MainActivity
 import dagger.BindsInstance
 import dagger.Component
 
