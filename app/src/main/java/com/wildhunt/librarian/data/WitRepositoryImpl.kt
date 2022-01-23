@@ -19,6 +19,8 @@ class WitRepositoryImpl(
         }
 
         val response = witApi.postAudio(contentType = "audio/mpeg3", body = body)
-        return response.toSuccess().entities.flatMap { (_, v) -> v.map { it.value } }
+        return response.toSuccess()
+            .also { println(it.text) }
+            .entities.flatMap { (_, v) -> v.map { it.value } }
     }
 }

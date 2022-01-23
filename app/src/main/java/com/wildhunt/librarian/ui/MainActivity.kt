@@ -101,6 +101,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        viewModel.initConversation()
     }
 
     fun stopAudioRecording(fileName: String) {

@@ -13,16 +13,14 @@ class AudioRecorder {
     private var recorder: MediaRecorder? = null
 
     var isRecording: Boolean = false
-        private set(value) {
-            field = value
-        }
+        private set
     var recordingFileName: String? = null
 
     fun startRecording(fileName: String) {
         recorder = MediaRecorder().apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
+            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
             setOutputFile(fileName)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
 
             try {
