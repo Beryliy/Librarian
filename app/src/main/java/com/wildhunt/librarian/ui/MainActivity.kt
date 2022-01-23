@@ -2,14 +2,11 @@ package com.wildhunt.librarian.ui
 
 import android.Manifest
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterStart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -376,14 +372,11 @@ fun MessageInput(onSend: (Message) -> Unit) {
 
     Box(
         modifier = Modifier
-        .navigationBarsWithImePadding()
-        .heightIn(min = 56.dp)
-        .fillMaxWidth()
-        .background(Colors.grey)
+            .navigationBarsWithImePadding()
+            .heightIn(min = 56.dp)
+            .fillMaxWidth()
+            .background(Colors.grey)
     ) {
-        AnimatedVisibility(visible = btnState == ComponentState.Pressed && input.isBlank()) {
-            Box(modifier = Modifier.height(56.dp).padding(5.dp).fillMaxWidth().background(Color.Green))
-        }
         Row {
             TextField(
                 value = input,
@@ -441,6 +434,24 @@ fun MessageInput(onSend: (Message) -> Unit) {
                     )
                 }
             }
+        }
+        AnimatedVisibility(
+            visible = btnState == ComponentState.Pressed && input.isBlank(),
+            enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
+        ) {
+            Box(
+                modifier = Modifier
+                    .height(56.dp)
+                    .padding(vertical = 8.dp, horizontal = 12.dp)
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xffA9FFD6), Colors.blue),
+                        ),
+                        shape = RoundedCornerShape(18.dp)
+                    )
+            )
         }
     }
 }
