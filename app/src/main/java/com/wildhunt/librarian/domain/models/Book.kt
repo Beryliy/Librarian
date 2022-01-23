@@ -6,6 +6,7 @@ data class Book (
   val categories: List<String>,
   val description: String,
   val imageLinks: Images? = null,
+  val rating: Double = 0.0,
   val language: String,
   val pageCount: Int,
   val subtitle: String,

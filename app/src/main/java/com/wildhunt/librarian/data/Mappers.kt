@@ -11,11 +11,12 @@ fun ImageLinks.toImages(): Images =
 fun Item.toBook(): Book =
   volumeInfo.run {
     Book(
-      id,
+      id ?: this@toBook.id,
       authors ?: listOf(),
       categories ?: listOf(),
       description ?: "",
       imageLinks?.toImages(),
+      averageRating,
       language ?: "",
       pageCount ?: 0,
       subtitle ?: "",

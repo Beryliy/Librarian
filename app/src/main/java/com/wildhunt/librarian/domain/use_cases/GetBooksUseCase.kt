@@ -5,6 +5,7 @@ import com.wildhunt.librarian.domain.repository.BooksRepository
 
 interface GetBooksUseCase {
     suspend fun getBooks(keywords: List<String>): List<Book>
+    suspend fun getDetails(book: Book): Book
 }
 
 class GetBooksUseCaseImpl(
@@ -12,5 +13,9 @@ class GetBooksUseCaseImpl(
 ) : GetBooksUseCase {
     override suspend fun getBooks(keywords: List<String>): List<Book> {
         return repo.getBooks(keywords)
+    }
+
+    override suspend fun getDetails(book: Book): Book {
+        return repo.getDetails(book)
     }
 }

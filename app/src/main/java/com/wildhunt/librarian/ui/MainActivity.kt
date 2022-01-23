@@ -1,6 +1,7 @@
 package com.wildhunt.librarian.ui
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -34,16 +36,16 @@ import com.google.accompanist.insets.navigationBarsWithImePadding
 import com.google.accompanist.insets.statusBarsPadding
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.wildhunt.librarian.R
-import com.wildhunt.librarian.domain.models.AudioMessage
+import com.wildhunt.librarian.di.AppComponent
 import com.wildhunt.librarian.domain.models.Message
 import com.wildhunt.librarian.domain.models.Sender
-import com.wildhunt.librarian.domain.models.TextMessage
 
 class MainActivity : AppCompatActivity() {
     private val viewModel: ChatViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppComponent.get(this).inject(viewModel)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
@@ -73,6 +75,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        viewModel.initConversation()
     }
 }
 
@@ -183,24 +187,48 @@ fun Message(message: Message) {
         ) {
 
             when (message) {
-                is TextMessage -> {
+                is Message.Text -> {
                     Box(
-                        modifier = Modifier.background(
-                            brush = Brush.radialGradient(
-                                0.1f to Color.White,
-                                1f to Colors.blue,
-                                radius = 200f,
-                                center = Offset(-80f, -80f),
-                                tileMode = TileMode.Clamp,
-                            ),
-                            shape = RoundedCornerShape(18.dp),
-                        ).padding(vertical = 12.dp, horizontal = 6.dp)
+                        modifier = Modifier
+                            .background(
+                                brush = Brush.radialGradient(
+                                    0.1f to Color.White,
+                                    1f to Colors.blue,
+                                    radius = 200f,
+                                    center = Offset(-80f, -80f),
+                                    tileMode = TileMode.Clamp,
+                                ),
+                                shape = RoundedCornerShape(18.dp),
+                            )
+                            .padding(vertical = 12.dp, horizontal = 6.dp)
                     ) {
                         Text(text = message.text, color = Color.White)
                     }
                 }
-                is AudioMessage -> {
+                is Message.Audio -> {
 
+                }
+                is Message.Recommendation -> {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                brush = Brush.radialGradient(
+                                    0.1f to Color.White,
+                                    1f to Colors.blue,
+                                    radius = 200f,
+                                    center = Offset(-80f, -80f),
+                                    tileMode = TileMode.Clamp,
+                                ),
+                                shape = RoundedCornerShape(18.dp),
+                            )
+                            .padding(vertical = 12.dp, horizontal = 6.dp)
+                    ) {
+                        Column {
+                            Text(text = message.title ?: "[NO TITLE]", color = Color.White)
+                            Text(text = message.authors ?: "", color = Color.White)
+                            Text(text = message.description ?: "", color = Color.White)
+                        }
+                    }
                 }
             }
 
@@ -244,7 +272,7 @@ fun MessageInput(onSend: (Message) -> Unit) {
                     indication = null,
                 ) {
                     if (input.isNotBlank()) {
-                        onSend(TextMessage(sender = Sender.Me, text = input))
+                        onSend(Message.Text(sender = Sender.Me, text = input))
                         input = ""
                     }
                 }
