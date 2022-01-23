@@ -12,8 +12,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class ChatViewModel : ViewModel() {
-  private val audioRecorder = AudioRecorder()
-  private val audioPlayer = AudioPlayer()
 
   private val _messagesFlow = MutableStateFlow<List<Message>>(emptyList())
   val messagesFlow: Flow<List<Message>> = _messagesFlow
@@ -28,22 +26,6 @@ class ChatViewModel : ViewModel() {
 
   @Inject
   lateinit var getKeywords: GetKeywordsUseCase
-
-  fun startAudioRecording(fileName: String): String {
-    audioRecorder.startRecording(fileName)
-    return fileName
-  }
-
-  fun stopAudioRecording(fileName: String) {
-    audioRecorder.stopRecording()
-    viewModelScope.launch {
-//      _messagesFlow.emit(listOf(AudioMessage(fileName)))
-    }
-  }
-
-  fun startPlaying(fileName: String) {
-    audioPlayer.startPlaying(fileName)
-  }
 
   fun initConversation() {
     viewModelScope.launch {
@@ -80,11 +62,19 @@ class ChatViewModel : ViewModel() {
 
         aiReply("Take a look at this book:")
         saveMessage(Message.Recommendation(
-          imageUrl = detailed.imageLinks?.thumbnail,
+          imageUrl = detailed.imageLinks
+            ?.large
+            ?.takeUnless(String::isBlank)
+            ?: detailed.imageLinks
+              ?.medium
+              ?.takeUnless(String::isBlank)
+            ?: detailed.imageLinks
+              ?.thumbnail
+              ?.takeUnless(String::isBlank),
           title = detailed.title,
           description = detailed.description,
-          authors = detailed.authors.joinToString(", "),
-          genre = detailed.categories.joinToString(", ")
+          authors = detailed.authors,
+          genre = detailed.categories,
         ))
       }
     } else {

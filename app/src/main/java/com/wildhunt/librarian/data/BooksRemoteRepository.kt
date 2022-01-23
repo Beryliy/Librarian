@@ -26,6 +26,8 @@ class BooksRemoteRepository(
         imageLinks = Images(
           smallThumbnail = detailed.imageLinks?.smallThumbnail ?: book.imageLinks?.smallThumbnail ?: "",
           thumbnail = detailed.imageLinks?.thumbnail ?: book.imageLinks?.thumbnail ?: "",
+          medium = detailed.imageLinks?.medium ?: book.imageLinks?.medium ?: "",
+          large = detailed.imageLinks?.large ?: book.imageLinks?.large ?: "",
         ),
         language = detailed.language ?: book.language,
         pageCount = detailed.pageCount ?: book.pageCount,

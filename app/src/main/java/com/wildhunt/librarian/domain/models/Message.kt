@@ -29,10 +29,10 @@ sealed class Message(
     class Recommendation(
         id: UUID = UUID.randomUUID(),
         date: Date = Date(),
-        val imageUrl: String?,
-        val title: String?,
-        val description: String?,
-        val authors: String?,
-        val genre: String?,
+        val imageUrl: String? = null,
+        val title: String,
+        val description: String? = null,
+        val authors: List<String> = listOf(),
+        val genre: List<String> = listOf(),
     ): Message(id, Sender.AI, date)
 }

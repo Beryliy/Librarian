@@ -19,4 +19,8 @@ class AudioPlayer {
       }
     }
   }
+
+  fun pausePlaying() {
+    player?.pause()
+  }
 }
