@@ -10,7 +10,7 @@ buildscript {
     moshi_converter_version = '2.9.0'
     auth_version = '20.0.1'
     prefs_ktx = "1.7.0"
-    compose_version = '1.0.5'
+    compose_version = '1.2.0-alpha01'
   }
   repositories {
     google()

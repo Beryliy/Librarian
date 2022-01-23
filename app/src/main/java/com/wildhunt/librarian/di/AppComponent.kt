@@ -1,8 +1,10 @@
 package com.wildhunt.librarian.di
 
 import android.content.Context
+import com.wildhunt.librarian.ui.ChatViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.wildhunt.librarian.ui.MainActivity
 import com.wildhunt.librarian.data.UserRepo
-import com.wildhunt.librarian.MainActivity
 import dagger.BindsInstance
 import dagger.Component
 
@@ -14,6 +16,8 @@ import dagger.Component
 )
 interface AppComponent {
   fun userRepo(): UserRepo
+  fun inject(viewModel: ChatViewModel)
+  @ExperimentalPermissionsApi
   fun inject(activity: MainActivity)
 
   @Component.Builder
