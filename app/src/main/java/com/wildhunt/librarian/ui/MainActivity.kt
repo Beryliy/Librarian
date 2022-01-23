@@ -215,6 +215,8 @@ fun Message(message: Message) {
         Arrangement.Start
     }
 
+    val context = LocalLockedAudioPlayer.current
+
     val brush = if (message.sender == Sender.Me) {
         Brush.radialGradient(
             0.1f to Color.White,
@@ -266,7 +268,13 @@ fun Message(message: Message) {
                     }
                 }
                 is AudioMessage -> {
-                    Image(painter = painterResource(id = R.drawable.ic_play), contentDescription = null)
+                    Box(
+                        modifier = Modifier.clickable {
+                            context.startPlaying(message.fileName)
+                        }
+                    ) {
+                        Image(painter = painterResource(id = R.drawable.ic_play), contentDescription = null)
+                    }
                 }
                 is RecommendationMessage -> {
                     Column(
@@ -331,17 +339,6 @@ fun MessageInput(onSend: (Message) -> Unit) {
     val context = LocalContext.current
 
     val cameraPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
-    PermissionRequired(
-        permissionState = cameraPermissionState,
-        permissionNotGrantedContent = {
-
-        },
-        permissionNotAvailableContent = {
-        }
-    ) {
-        Text("Camera permission Granted")
-    }
-
 
     Row(
         modifier = Modifier
@@ -376,24 +373,28 @@ fun MessageInput(onSend: (Message) -> Unit) {
                 ) {
                     when {
                         input.isNotBlank() -> {
-                            Log.d("123123123", "5")
                             onSend(TextMessage(sender = Sender.Me, text = input))
                             input = ""
                         }
                         recorder.isRecording -> {
-                            Log.d("123123123", "3")
-                            recorder.stopRecording()?.let {
-                                Log.d("123123123", "4")
-                                onSend(AudioMessage(sender = Sender.Me, fileName = it, length = 0))
-                            } ?: error("no file name provided")
+                            recorder
+                                .stopRecording()
+                                ?.let {
+                                    onSend(
+                                        AudioMessage(
+                                            sender = Sender.Me,
+                                            fileName = it,
+                                            length = 0
+                                        )
+                                    )
+                                } ?: error("no file name provided")
                         }
                         !cameraPermissionState.hasPermission -> {
-                            Log.d("123123123", "2")
                             cameraPermissionState.launchPermissionRequest()
                         }
                         else -> {
-                            Log.d("123123123", "1")
-                            val fileName = "${context.externalCacheDir?.absolutePath}/${UUID.randomUUID()}_audio"
+                            val fileName =
+                                "${context.externalCacheDir?.absolutePath}/${UUID.randomUUID()}_audio"
                             recorder.startRecording(fileName)
                         }
                     }
@@ -401,7 +402,7 @@ fun MessageInput(onSend: (Message) -> Unit) {
                 .padding(12.dp)
         ) {
             if (input.isNotBlank()) {
-                Image(painter = painterResource(id = R.drawable.ic_mic), contentDescription = null)
+                Image(painter = painterResource(id = R.drawable.ic_send), contentDescription = null)
             } else {
                 Image(painter = painterResource(id = R.drawable.ic_mic), contentDescription = null)
             }
