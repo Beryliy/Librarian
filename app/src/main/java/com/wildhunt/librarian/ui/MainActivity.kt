@@ -7,9 +7,13 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,11 +28,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterStart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -43,13 +49,13 @@ import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.navigationBarsWithImePadding
 import com.google.accompanist.insets.statusBarsPadding
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionRequired
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.wildhunt.librarian.R
-import com.wildhunt.librarian.domain.models.*
-import java.util.*
 import com.wildhunt.librarian.di.AppComponent
+import com.wildhunt.librarian.domain.models.Message
+import com.wildhunt.librarian.domain.models.Sender
+import java.util.*
 
 val LocalLockedAudioPlayer = compositionLocalOf<AudioPlayer> { error("Uninitialized") }
 val LocalLockedAudioRecorder = compositionLocalOf<AudioRecorder> { error("Uninitialized") }
@@ -141,7 +147,6 @@ fun Feed(
     }
 }
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun Chat(
     messages: List<Message>,
@@ -272,7 +277,10 @@ fun Message(message: Message) {
                             context.startPlaying(message.fileName)
                         }
                     ) {
-                        Image(painter = painterResource(id = R.drawable.ic_play), contentDescription = null)
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_play),
+                            contentDescription = null
+                        )
                     }
                 }
                 is Message.Recommendation -> {
@@ -330,80 +338,108 @@ fun Message(message: Message) {
     }
 }
 
-@ExperimentalPermissionsApi
+private enum class ComponentState { Pressed, Released }
+
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun MessageInput(onSend: (Message) -> Unit) {
     var input by remember { mutableStateOf("") }
+    var btnState by remember { mutableStateOf(ComponentState.Released) }
+    val cameraPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
     val recorder = LocalLockedAudioRecorder.current
     val context = LocalContext.current
 
-    val cameraPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
+    when {
+        input.isBlank() && btnState == ComponentState.Pressed && !cameraPermissionState.hasPermission -> {
+            SideEffect {
+                cameraPermissionState.launchPermissionRequest()
+            }
+        }
+        input.isBlank() && btnState == ComponentState.Released && recorder.isRecording -> {
+            recorder.stopRecording()?.let {
+                onSend(
+                    Message.Audio(
+                        sender = Sender.Me,
+                        fileName = it,
+                        length = 0,
+                    )
+                )
+            }
+        }
+        input.isBlank() && btnState == ComponentState.Pressed && !recorder.isRecording -> {
+            val fileName =
+                "${context.externalCacheDir?.absolutePath}/${UUID.randomUUID()}_audio"
+            recorder.startRecording(fileName)
+        }
+    }
 
-    Row(
+
+    Box(
         modifier = Modifier
-            .navigationBarsWithImePadding()
-            .heightIn(min = 56.dp)
-            .background(Colors.grey)
+        .navigationBarsWithImePadding()
+        .heightIn(min = 56.dp)
+        .fillMaxWidth()
+        .background(Colors.grey)
     ) {
-        TextField(
-            value = input,
-            onValueChange = { input = it },
-            modifier = Modifier.weight(1f),
-            placeholder = @Composable {
-                Text("Message")
-            },
-            shape = RectangleShape,
-            maxLines = 10,
-            colors = TextFieldDefaults.textFieldColors(
-                textColor = Color.White,
-                cursorColor = Color.White,
-                backgroundColor = Color.Transparent,
-                placeholderColor = Colors.greyLight,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
-            ),
-        )
-        Box(
-            modifier = Modifier
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                ) {
-                    when {
-                        input.isNotBlank() -> {
+        AnimatedVisibility(visible = btnState == ComponentState.Pressed && input.isBlank()) {
+            Box(modifier = Modifier.height(56.dp).padding(5.dp).fillMaxWidth().background(Color.Green))
+        }
+        Row {
+            TextField(
+                value = input,
+                onValueChange = { input = it },
+                modifier = Modifier.weight(1f),
+                placeholder = @Composable {
+                    Text("Message")
+                },
+                shape = RectangleShape,
+                maxLines = 10,
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = Color.White,
+                    cursorColor = Color.White,
+                    backgroundColor = Color.Transparent,
+                    placeholderColor = Colors.greyLight,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                ),
+            )
+            if (input.isNotBlank()) {
+                Box(
+                    modifier = Modifier
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
                             onSend(Message.Text(sender = Sender.Me, text = input))
                             input = ""
                         }
-                        recorder.isRecording -> {
-                            recorder
-                                .stopRecording()
-                                ?.let {
-                                    onSend(
-                                        Message.Audio(
-                                            sender = Sender.Me,
-                                            fileName = it,
-                                            length = 0
-                                        )
-                                    )
-                                } ?: error("no file name provided")
-                        }
-                        !cameraPermissionState.hasPermission -> {
-                            cameraPermissionState.launchPermissionRequest()
-                        }
-                        else -> {
-                            val fileName =
-                                "${context.externalCacheDir?.absolutePath}/${UUID.randomUUID()}_audio"
-                            recorder.startRecording(fileName)
-                        }
-                    }
+                        .padding(12.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_send),
+                        contentDescription = null
+                    )
                 }
-                .padding(12.dp)
-        ) {
-            if (input.isNotBlank()) {
-                Image(painter = painterResource(id = R.drawable.ic_send), contentDescription = null)
             } else {
-                Image(painter = painterResource(id = R.drawable.ic_mic), contentDescription = null)
+                Box(
+                    modifier = Modifier
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onPress = {
+                                    btnState = ComponentState.Pressed
+                                    awaitRelease()
+                                    btnState = ComponentState.Released
+                                }
+                            )
+                        }
+                        .padding(12.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_mic),
+                        contentDescription = null
+                    )
+                }
             }
         }
     }

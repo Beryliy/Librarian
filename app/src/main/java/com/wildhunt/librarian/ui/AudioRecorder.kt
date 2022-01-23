@@ -2,11 +2,15 @@ package com.wildhunt.librarian.ui
 
 import android.media.MediaRecorder
 import android.util.Log
+import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.Path
 
 class AudioRecorder {
 
-  private var recorder: MediaRecorder? = null
+    private var recorder: MediaRecorder? = null
 
     var isRecording: Boolean = false
         private set(value) {
@@ -32,13 +36,10 @@ class AudioRecorder {
             isRecording = try {
                 start()
                 recordingFileName = fileName
-                Log.d("123123123", "8")
-
                 true
             } catch (e: IllegalStateException) {
                 Log.e(AudioRecorder::class.java.simpleName, e.toString())
                 recordingFileName = null
-                Log.d("123123123", "9")
                 false
             }
         }
@@ -46,12 +47,18 @@ class AudioRecorder {
 
     fun stopRecording(): String? {
         val f = recordingFileName
-        recorder?.stop()
-        recorder?.release()
         isRecording = false
-        recorder = null
         recordingFileName = null
 
-        return f
+        return try {
+            recorder?.stop()
+            recorder?.release()
+            recorder = null
+
+            f
+        } catch (e: Exception) {
+            f?.let { File(f).delete() }
+            null
+        }
     }
 }
