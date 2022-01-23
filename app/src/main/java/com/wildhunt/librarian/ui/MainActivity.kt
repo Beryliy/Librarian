@@ -15,6 +15,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Text
@@ -25,15 +26,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterStart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.font.FontWeight.Companion.Normal
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -202,7 +203,15 @@ fun TopBar(onBack: () -> Unit) {
                 painter = painterResource(id = R.drawable.ic_arrow_left),
                 contentDescription = null
             )
-            Text(text = "Back", color = Colors.blue)
+            Text(
+                text = "Back",
+                color = Colors.blue,
+                lineHeight = 22.sp,
+                fontSize = 16.sp,
+                fontFamily = robotoFamily,
+                fontWeight = Normal,
+                modifier = Modifier.padding(start = 4.dp),
+            )
         }
     }
 }
@@ -273,7 +282,9 @@ fun Message(message: Message) {
                         AsyncImage(
                             model = message.imageUrl,
                             contentDescription = null,
-                            Modifier
+                            contentScale = ContentScale.FillWidth,
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(
                                     start = 2.dp,
                                     top = 2.dp,
@@ -288,12 +299,21 @@ fun Message(message: Message) {
                         ) { state ->
                             when (state) {
                                 is AsyncImagePainter.State.Loading -> {
-                                    Text(text = "Loading...")
+                                    Image(
+                                        painterResource(id = R.drawable.pic_placeholder),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.FillWidth,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
                                 }
                                 is AsyncImagePainter.State.Error -> {
                                     state.result.throwable.printStackTrace()
-                                    Text(text = state.result.throwable.toString())
-//                                    Image(painterResource(id = R.drawable.bg_chat), contentDescription = null)
+                                    Image(
+                                        painterResource(id = R.drawable.pic_placeholder),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.FillWidth,
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
                                 }
                                 is AsyncImagePainter.State.Success -> {
                                     AsyncImageContent()
@@ -307,9 +327,56 @@ fun Message(message: Message) {
                             lineHeight = 22.sp,
                             fontSize = 16.sp,
                             fontFamily = robotoFamily,
-                            fontWeight = Normal,
+                            fontWeight = Bold,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                         )
+
+                        if (message.authors.isNotEmpty()) {
+                            Text(
+                                text = message.authors.joinToString(", "),
+                                color = Color.White,
+                                fontStyle = FontStyle.Italic,
+                                lineHeight = 22.sp,
+                                fontSize = 16.sp,
+                                fontFamily = robotoFamily,
+                                fontWeight = Normal,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+
+                        if (!message.description.isNullOrBlank()) {
+                            Text(
+                                text = message.description,
+                                color = Color.White,
+                                lineHeight = 22.sp,
+                                fontSize = 16.sp,
+                                fontFamily = robotoFamily,
+                                fontWeight = Normal,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+
+                        if (message.genre.isNotEmpty()) {
+                            Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
+                                Text(
+                                    text = "Type: ",
+                                    color = Color.White,
+                                    lineHeight = 22.sp,
+                                    fontSize = 16.sp,
+                                    fontFamily = robotoFamily,
+                                    fontWeight = Bold,
+                                )
+
+                                Text(
+                                    text = message.genre.joinToString(", "),
+                                    color = Color.White,
+                                    lineHeight = 22.sp,
+                                    fontSize = 16.sp,
+                                    fontFamily = robotoFamily,
+                                    fontWeight = Normal,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -351,7 +418,6 @@ fun MessageInput(onSend: (Message) -> Unit) {
             recorder.startRecording(fileName)
         }
     }
-
 
     Box(
         modifier = Modifier
@@ -433,8 +499,13 @@ fun MessageInput(onSend: (Message) -> Unit) {
                             colors = listOf(Color(0xffA9FFD6), Colors.blue),
                         ),
                         shape = RoundedCornerShape(18.dp)
-                    )
-            )
+                    ),
+                contentAlignment = CenterStart,
+            ) {
+                Box(
+                    modifier = Modifier.padding(16.dp).size(8.dp).background(Color.Red, CircleShape)
+                )
+            }
         }
     }
 }
