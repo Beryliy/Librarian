@@ -43,7 +43,6 @@ import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.navigationBarsWithImePadding
 import com.google.accompanist.insets.statusBarsPadding
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionRequired
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.wildhunt.librarian.R
@@ -98,6 +97,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        viewModel.initConversation()
     }
 
     fun stopAudioRecording(fileName: String) {
@@ -393,7 +394,7 @@ fun MessageInput(onSend: (Message) -> Unit) {
                         }
                         else -> {
                             val fileName =
-                                "${context.externalCacheDir?.absolutePath}/${UUID.randomUUID()}_audio"
+                                "${context.externalCacheDir?.absolutePath}/${UUID.randomUUID()}_audio.mp3"
                             recorder.startRecording(fileName)
                         }
                     }
