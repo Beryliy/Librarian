@@ -6,21 +6,27 @@ import java.io.IOException
 
 class AudioPlayer {
 
-  private var player: MediaPlayer? = null
+    private var player: MediaPlayer? = null
 
-  fun startPlaying(fileName: String) {
-    player = MediaPlayer().apply {
-      try {
-        setDataSource(fileName)
-        prepare()
-        start()
-      } catch (e: IOException) {
-        Log.e(AudioPlayer::class.java.simpleName, "prepare() failed")
-      }
+    fun startPlaying(fileName: String) {
+        player = MediaPlayer().apply {
+            try {
+                setDataSource(fileName)
+                prepare()
+                start()
+            } catch (e: IOException) {
+                Log.e(AudioPlayer::class.java.simpleName, "prepare() failed")
+            }
+        }
     }
-  }
 
-  fun pausePlaying() {
-    player?.pause()
-  }
+    fun pausePlaying() {
+        player?.pause()
+    }
+
+    fun stopPlaying() {
+        player?.stop()
+        player?.release()
+        player = null
+    }
 }

@@ -22,7 +22,7 @@ sealed class Message(
         id: UUID = UUID.randomUUID(),
         sender: Sender,
         date: Date = Date(),
-        val path: String,
+        val fileName: String,
         val length: Long,
     ) : Message(id, sender, date)
 
