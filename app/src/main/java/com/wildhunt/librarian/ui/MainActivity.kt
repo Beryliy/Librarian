@@ -4,9 +4,7 @@ import android.Manifest
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
@@ -22,7 +20,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterStart
 import androidx.compose.ui.Modifier
@@ -52,6 +49,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.wildhunt.librarian.R
 import com.wildhunt.librarian.domain.models.*
 import java.util.*
+import com.wildhunt.librarian.di.AppComponent
 
 val LocalLockedAudioPlayer = compositionLocalOf<AudioPlayer> { error("Uninitialized") }
 val LocalLockedAudioRecorder = compositionLocalOf<AudioRecorder> { error("Uninitialized") }
@@ -65,6 +63,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppComponent.get(this).inject(viewModel)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
@@ -110,7 +109,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        
+
         audioRecorder.stopRecording()
         audioPlayer.stopPlaying()
     }
@@ -245,7 +244,7 @@ fun Message(message: Message) {
         ) {
 
             when (message) {
-                is TextMessage -> {
+                is Message.Text -> {
                     Box(
                         modifier = Modifier
                             .background(
@@ -267,7 +266,7 @@ fun Message(message: Message) {
                         )
                     }
                 }
-                is AudioMessage -> {
+                is Message.Audio -> {
                     Box(
                         modifier = Modifier.clickable {
                             context.startPlaying(message.fileName)
@@ -276,7 +275,7 @@ fun Message(message: Message) {
                         Image(painter = painterResource(id = R.drawable.ic_play), contentDescription = null)
                     }
                 }
-                is RecommendationMessage -> {
+                is Message.Recommendation -> {
                     Column(
                         modifier = Modifier
                             .background(
@@ -285,7 +284,7 @@ fun Message(message: Message) {
                             )
                     ) {
                         AsyncImage(
-                            model = "https://www.pngall.com/wp-content/uploads/2016/04/Free-Free-Download-PNG.png",
+                            model = message.imageUrl,
                             contentDescription = null,
                             Modifier
                                 .padding(
@@ -305,7 +304,7 @@ fun Message(message: Message) {
                                     Text(text = "Loading...")
                                 }
                                 is AsyncImagePainter.State.Error -> {
-
+                                    state.result.throwable.printStackTrace()
                                     Text(text = state.result.throwable.toString())
 //                                    Image(painterResource(id = R.drawable.bg_chat), contentDescription = null)
                                 }
@@ -373,7 +372,7 @@ fun MessageInput(onSend: (Message) -> Unit) {
                 ) {
                     when {
                         input.isNotBlank() -> {
-                            onSend(TextMessage(sender = Sender.Me, text = input))
+                            onSend(Message.Text(sender = Sender.Me, text = input))
                             input = ""
                         }
                         recorder.isRecording -> {
@@ -381,7 +380,7 @@ fun MessageInput(onSend: (Message) -> Unit) {
                                 .stopRecording()
                                 ?.let {
                                     onSend(
-                                        AudioMessage(
+                                        Message.Audio(
                                             sender = Sender.Me,
                                             fileName = it,
                                             length = 0

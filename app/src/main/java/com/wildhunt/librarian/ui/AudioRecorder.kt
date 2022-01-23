@@ -6,7 +6,7 @@ import java.io.IOException
 
 class AudioRecorder {
 
-    private var recorder: MediaRecorder? = null
+  private var recorder: MediaRecorder? = null
 
     var isRecording: Boolean = false
         private set(value) {
@@ -18,7 +18,7 @@ class AudioRecorder {
         recorder = MediaRecorder().apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFile(fileName)
-            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
 
             try {

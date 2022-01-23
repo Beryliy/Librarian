@@ -1,30 +1,109 @@
 package com.wildhunt.librarian.ui
 
 import androidx.lifecycle.*
+import com.wildhunt.librarian.domain.models.Book
 import com.wildhunt.librarian.domain.models.Message
-import com.wildhunt.librarian.domain.models.RecommendationMessage
 import com.wildhunt.librarian.domain.models.Sender
-import com.wildhunt.librarian.domain.models.TextMessage
-import kotlinx.coroutines.delay
+import com.wildhunt.librarian.domain.use_cases.GetBooksUseCase
+import com.wildhunt.librarian.domain.use_cases.GetKeywordsUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 class ChatViewModel : ViewModel() {
 
   private val _messagesFlow = MutableStateFlow<List<Message>>(emptyList())
   val messagesFlow: Flow<List<Message>> = _messagesFlow
 
+  private var conversationState: ConversationState = ConversationState.Greeting
+  private var detectedKeywords = mutableSetOf<String>()
+  private var cachedBooks = mutableSetOf<Book>()
+  private val KEYWORD_THRESHOLD = 3
+
+  @Inject
+  lateinit var getBooks: GetBooksUseCase
+
+  @Inject
+  lateinit var getKeywords: GetKeywordsUseCase
+
+  fun initConversation() {
+    viewModelScope.launch {
+      conversationState = ConversationState.Greeting
+      detectedKeywords.clear()
+      aiReply(Questions.greetings.random())
+    }
+  }
+
   fun newUserMessage(message: Message) {
     viewModelScope.launch {
-      val messages = listOf(message) + _messagesFlow.value
-      _messagesFlow.emit(messages)
+      saveMessage(message)
+      detectKeywords(message)
+      reply()
+    }
+  }
 
-      launch {
-        delay(3000)
-        val n = listOf(RecommendationMessage(sender = Sender.AI, title = "asdf sadf asd f")) + _messagesFlow.value
-        _messagesFlow.emit(n)
+  private suspend fun detectKeywords(message: Message) {
+    detectedKeywords.addAll(getKeywords.get(message))
+  }
+
+  private suspend fun reply() {
+    if (detectedKeywords.size > KEYWORD_THRESHOLD) {
+      val books = getBooks.getBooks(detectedKeywords.toList())
+      cachedBooks.addAll(books)
+
+      if (cachedBooks.isEmpty()) {
+        aiReply(Questions.noBooks)
+      } else {
+        val book = cachedBooks.maxByOrNull { it.rating } ?: return aiReply(Questions.noBooks)
+        cachedBooks.remove(book)
+        val detailed = getBooks.getDetails(book)
+
+        aiReply("Take a look at this book:")
+        saveMessage(Message.Recommendation(
+          imageUrl = detailed.imageLinks
+            ?.large
+            ?.takeUnless(String::isBlank)
+            ?: detailed.imageLinks
+              ?.medium
+              ?.takeUnless(String::isBlank)
+            ?: detailed.imageLinks
+              ?.thumbnail
+              ?.takeUnless(String::isBlank),
+          title = detailed.title,
+          description = detailed.description,
+          authors = detailed.authors,
+          genre = detailed.categories,
+        ))
+      }
+    } else {
+      when (conversationState) {
+        ConversationState.Greeting -> {
+          conversationState = ConversationState.Genre
+          aiReply(Questions.genres.random())
+        }
+        ConversationState.Genre -> {
+          conversationState = ConversationState.Default
+          aiReply(Questions.keywords.random())
+        }
+        ConversationState.Default -> {
+          aiReply(Questions.keywords.random())
+        }
       }
     }
+  }
+
+  private suspend fun aiReply(text: String) {
+    saveMessage(Message.Text(sender = Sender.AI, text = text))
+  }
+
+  private suspend fun saveMessage(message: Message) {
+    _messagesFlow.emit(listOf(message) + _messagesFlow.value)
+  }
+
+  enum class ConversationState {
+    Greeting,
+    Genre,
+    Default,
   }
 }
