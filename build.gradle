@@ -8,6 +8,8 @@ buildscript {
     nav_version = '2.3.5'
     moshi_version = '1.13.0'
     moshi_converter_version = '2.9.0'
+    auth_version = '20.0.1'
+    prefs_ktx = "1.7.0"
     compose_version = '1.2.0-alpha01'
   }
   repositories {
@@ -15,6 +17,8 @@ buildscript {
     mavenCentral()
   }
   dependencies {
+    classpath "com.android.tools.build:gradle:7.0.3"
+    classpath 'com.google.gms:google-services:4.3.10'
     classpath "com.android.tools.build:gradle:7.0.4"
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
 
