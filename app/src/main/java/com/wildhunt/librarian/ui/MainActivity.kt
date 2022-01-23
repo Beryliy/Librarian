@@ -216,24 +216,7 @@ fun Message(message: Message) {
     }
 
     val context = LocalLockedAudioPlayer.current
-
-    val brush = if (message.sender == Sender.Me) {
-        Brush.radialGradient(
-            0.1f to Color.White,
-            1f to Colors.blue,
-            radius = 200f,
-            center = Offset(-80f, -80f),
-            tileMode = TileMode.Clamp,
-        )
-    } else {
-        Brush.radialGradient(
-            0.1f to Color.White,
-            1f to Colors.greyGradient,
-            radius = 200f,
-            center = Offset(-80f, -80f),
-            tileMode = TileMode.Clamp,
-        )
-    }
+    val background = if (message.sender == Sender.Me) Colors.blue else Colors.greyGradient
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -249,7 +232,7 @@ fun Message(message: Message) {
                     Box(
                         modifier = Modifier
                             .background(
-                                brush = brush,
+                                color = background,
                                 shape = RoundedCornerShape(14.dp),
                             )
                             .padding(vertical = 6.dp, horizontal = 12.dp),
@@ -283,7 +266,7 @@ fun Message(message: Message) {
                     Column(
                         modifier = Modifier
                             .background(
-                                brush = brush,
+                                color = background,
                                 shape = RoundedCornerShape(14.dp),
                             )
                     ) {
