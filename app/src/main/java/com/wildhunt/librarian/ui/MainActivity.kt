@@ -1,8 +1,12 @@
 package com.wildhunt.librarian.ui
 
+import android.Manifest
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
@@ -18,6 +22,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterStart
 import androidx.compose.ui.Modifier
@@ -28,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Normal
 import androidx.compose.ui.unit.dp
@@ -39,15 +45,23 @@ import coil.compose.AsyncImagePainter
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.navigationBarsWithImePadding
 import com.google.accompanist.insets.statusBarsPadding
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionRequired
+import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.wildhunt.librarian.R
 import com.wildhunt.librarian.domain.models.*
+import java.util.*
 
+val LocalLockedAudioPlayer = compositionLocalOf<AudioPlayer> { error("Uninitialized") }
+val LocalLockedAudioRecorder = compositionLocalOf<AudioRecorder> { error("Uninitialized") }
+
+@ExperimentalPermissionsApi
 class MainActivity : AppCompatActivity() {
     private val viewModel: ChatViewModel by viewModels()
 
-    private val audioRecorder = AudioRecorder()
-    private val audioPlayer = AudioPlayer()
+    private var audioRecorder = AudioRecorder()
+    private var audioPlayer = AudioPlayer()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,34 +71,34 @@ class MainActivity : AppCompatActivity() {
             var route by remember { mutableStateOf<Routes>(Routes.Feed) }
             val messages by viewModel.messagesFlow.collectAsState(initial = listOf())
 
-            ProvideWindowInsets {
-                val systemUiController = rememberSystemUiController()
+            CompositionLocalProvider(
+                LocalLockedAudioPlayer provides audioPlayer,
+                LocalLockedAudioRecorder provides audioRecorder,
+            ) {
+                ProvideWindowInsets {
+                    val systemUiController = rememberSystemUiController()
 
-                SideEffect {
-                    systemUiController.setSystemBarsColor(Colors.greyDark, darkIcons = false)
-                }
+                    SideEffect {
+                        systemUiController.setSystemBarsColor(Colors.greyDark, darkIcons = false)
+                    }
 
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .statusBarsPadding()
-                ) {
-                    when (route) {
-                        Routes.Feed -> Feed { route = Routes.Chat }
-                        Routes.Chat -> Chat(
-                            messages = messages,
-                            onBack = { route = Routes.Feed },
-                            onSend = { viewModel.newUserMessage(it) }
-                        )
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .statusBarsPadding()
+                    ) {
+                        when (route) {
+                            Routes.Feed -> Feed { route = Routes.Chat }
+                            Routes.Chat -> Chat(
+                                messages = messages,
+                                onBack = { route = Routes.Feed },
+                                onSend = { viewModel.newUserMessage(it) }
+                            )
+                        }
                     }
                 }
             }
         }
-    }
-
-    fun startAudioRecording(fileName: String): String {
-        audioRecorder.startRecording(fileName)
-        return fileName
     }
 
     fun stopAudioRecording(fileName: String) {
@@ -94,8 +108,11 @@ class MainActivity : AppCompatActivity() {
 //        }
     }
 
-    fun startPlaying(fileName: String) {
-        audioPlayer.startPlaying(fileName)
+    override fun onDestroy() {
+        super.onDestroy()
+        
+        audioRecorder.stopRecording()
+        audioPlayer.stopPlaying()
     }
 
 }
@@ -125,6 +142,7 @@ fun Feed(
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun Chat(
     messages: List<Message>,
@@ -248,7 +266,7 @@ fun Message(message: Message) {
                     }
                 }
                 is AudioMessage -> {
-
+                    Image(painter = painterResource(id = R.drawable.ic_play), contentDescription = null)
                 }
                 is RecommendationMessage -> {
                     Column(
@@ -305,9 +323,25 @@ fun Message(message: Message) {
     }
 }
 
+@ExperimentalPermissionsApi
 @Composable
 fun MessageInput(onSend: (Message) -> Unit) {
     var input by remember { mutableStateOf("") }
+    val recorder = LocalLockedAudioRecorder.current
+    val context = LocalContext.current
+
+    val cameraPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
+    PermissionRequired(
+        permissionState = cameraPermissionState,
+        permissionNotGrantedContent = {
+
+        },
+        permissionNotAvailableContent = {
+        }
+    ) {
+        Text("Camera permission Granted")
+    }
+
 
     Row(
         modifier = Modifier
@@ -340,9 +374,28 @@ fun MessageInput(onSend: (Message) -> Unit) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                 ) {
-                    if (input.isNotBlank()) {
-                        onSend(TextMessage(sender = Sender.Me, text = input))
-                        input = ""
+                    when {
+                        input.isNotBlank() -> {
+                            Log.d("123123123", "5")
+                            onSend(TextMessage(sender = Sender.Me, text = input))
+                            input = ""
+                        }
+                        recorder.isRecording -> {
+                            Log.d("123123123", "3")
+                            recorder.stopRecording()?.let {
+                                Log.d("123123123", "4")
+                                onSend(AudioMessage(sender = Sender.Me, fileName = it, length = 0))
+                            } ?: error("no file name provided")
+                        }
+                        !cameraPermissionState.hasPermission -> {
+                            Log.d("123123123", "2")
+                            cameraPermissionState.launchPermissionRequest()
+                        }
+                        else -> {
+                            Log.d("123123123", "1")
+                            val fileName = "${context.externalCacheDir?.absolutePath}/${UUID.randomUUID()}_audio"
+                            recorder.startRecording(fileName)
+                        }
                     }
                 }
                 .padding(12.dp)
